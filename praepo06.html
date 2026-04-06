@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Russisch Übung: Präpositionen в / на</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --accent-color: #3498db;
+            --success-color: #27ae60;
+            --error-color: #e74c3c;
+            --bg-color: #f4f7f6;
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 15px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 700px;
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        h1 { text-align: center; font-size: 1.3rem; }
+
+        .instruction {
+            background: #e1f5fe;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 5px solid var(--accent-color);
+            font-size: 0.9rem;
+        }
+
+        /* Wort-Pool */
+        .word-pool {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 25px;
+            padding: 15px;
+            border: 2px dashed #ddd;
+            border-radius: 10px;
+        }
+
+        .word {
+            background: var(--accent-color);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: 0.2s;
+            user-select: none;
+        }
+
+        .word.selected { background: #f39c12; transform: scale(1.05); }
+        .word.used { opacity: 0.2; pointer-events: none; }
+
+        /* Sätze */
+        .exercise-list { display: flex; flex-direction: column; gap: 10px; }
+
+        .sentence-row {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 10px;
+            background: #fafafa;
+            border-radius: 6px;
+            font-size: 1.05rem;
+        }
+
+        .drop-zone {
+            min-width: 120px;
+            height: 30px;
+            border-bottom: 2px solid #bdc3c7;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .drop-zone.correct { color: var(--success-color); border-bottom-color: var(--success-color); }
+        .drop-zone.wrong { color: var(--error-color); border-bottom-color: var(--error-color); }
+
+        /* Steuerung */
+        .footer { margin-top: 25px; display: flex; gap: 10px; justify-content: center; }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .btn-reset { background: #95a5a6; color: white; }
+        .btn-solution { background: var(--primary-color); color: white; }
+
+        @media (max-width: 500px) {
+            .sentence-row { font-size: 0.95rem; }
+            .drop-zone { min-width: 100px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Arbeiten wo? (в oder на)</h1>
+    
+    <div class="instruction">
+        Klicke ein Wort an und setze es in eine passende Lücke. Es gibt mehrere richtige Möglichkeiten für „в“ und „на“.
+    </div>
+
+    <div id="word-pool" class="word-pool"></div>
+
+    <div class="exercise-list">
+        <!-- 4x 'на' Lücken -->
+        <div class="sentence-row"><span>1. Я работаю на</span><div class="drop-zone" data-group="на"></div><span>.</span></div>
+        <div class="sentence-row"><span>2. Я работаю на</span><div class="drop-zone" data-group="на"></div><span>.</span></div>
+        <div class="sentence-row"><span>3. Я работаю на</span><div class="drop-zone" data-group="на"></div><span>.</span></div>
+        <div class="sentence-row"><span>4. Я работаю на</span><div class="drop-zone" data-group="на"></div><span>.</span></div>
+        <!-- 6x 'в' Lücken -->
+        <div class="sentence-row"><span>5. Я работаю в</span><div class="drop-zone" data-group="в"></div><span>.</span></div>
+        <div class="sentence-row"><span>6. Я работаю в</span><div class="drop-zone" data-group="в"></div><span>.</span></div>
+        <div class="sentence-row"><span>7. Я работаю в</span><div class="drop-zone" data-group="в"></div><span>.</span></div>
+        <div class="sentence-row"><span>8. Я работаю в</span><div class="drop-zone" data-group="в"></div><span>.</span></div>
+        <div class="sentence-row"><span>9. Я работаю в</span><div class="drop-zone" data-group="в"></div><span>.</span></div>
+        <div class="sentence-row"><span>10. Я работаю в</span><div class="drop-zone" data-group="в"></div><span>.</span></div>
+    </div>
+
+    <div class="footer">
+        <button class="btn-reset" onclick="resetGame()">Neustart</button>
+        <button class="btn-solution" onclick="showSolution()">Lösung</button>
+    </div>
+</div>
+
+<script>
+    // Definition der Wortgruppen
+    const groupNa = ["заводе", "стройке", "факультете", "сцене"];
+    const groupV = ["поликлинике", "кафе", "школе", "университете", "магазине", "офисе"];
+    
+    let selectedWord = null;
+    let selectedElem = null;
+
+    function initPool() {
+        const pool = document.getElementById('word-pool');
+        pool.innerHTML = '';
+        const allWords = [...groupNa, ...groupV].sort(() => Math.random() - 0.5);
+        
+        allWords.forEach(word => {
+            const div = document.createElement('div');
+            div.className = 'word';
+            div.textContent = word;
+            div.onclick = () => {
+                document.querySelectorAll('.word').forEach(w => w.classList.remove('selected'));
+                selectedWord = word;
+                selectedElem = div;
+                div.classList.add('selected');
+            };
+            pool.appendChild(div);
+        });
+    }
+
+    document.querySelectorAll('.drop-zone').forEach(zone => {
+        zone.onclick = () => {
+            if (!selectedWord) return;
+
+            // Falls schon ein Wort drin war, im Pool reaktivieren
+            const oldWord = zone.textContent;
+            if (oldWord) {
+                document.querySelectorAll('.word').forEach(w => {
+                    if (w.textContent === oldWord) w.classList.remove('used');
+                });
+            }
+
+            // Wort in Lücke setzen
+            zone.textContent = selectedWord;
+            selectedElem.classList.add('used');
+            selectedElem.classList.remove('selected');
+
+            // Intelligente Prüfung: Passt das Wort zur Gruppe der Lücke?
+            const targetGroup = zone.dataset.group;
+            let isCorrect = false;
+
+            if (targetGroup === "на" && groupNa.includes(selectedWord)) isCorrect = true;
+            if (targetGroup === "в" && groupV.includes(selectedWord)) isCorrect = true;
+
+            if (isCorrect) {
+                zone.className = 'drop-zone correct';
+            } else {
+                zone.className = 'drop-zone wrong';
+            }
+
+            selectedWord = null;
+            selectedElem = null;
+        };
+    });
+
+    function resetGame() {
+        document.querySelectorAll('.drop-zone').forEach(zone => {
+            zone.textContent = '';
+            zone.className = 'drop-zone';
+        });
+        initPool();
+        selectedWord = null;
+    }
+
+    function showSolution() {
+        // Zuerst alles leeren
+        resetGame();
+        
+        const zonesNa = document.querySelectorAll('.drop-zone[data-group="на"]');
+        const zonesV = document.querySelectorAll('.drop-zone[data-group="в"]');
+
+        zonesNa.forEach((zone, index) => {
+            zone.textContent = groupNa[index];
+            zone.className = 'drop-zone correct';
+        });
+
+        zonesV.forEach((zone, index) => {
+            zone.textContent = groupV[index];
+            zone.className = 'drop-zone correct';
+        });
+
+        document.querySelectorAll('.word').forEach(w => w.classList.add('used'));
+    }
+
+    initPool();
+</script>
+
+</body>
+</html>
