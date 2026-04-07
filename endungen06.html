@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Russisch Übung: Instrumental-Endungen (Berufe)</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --accent-color: #3498db;
+            --success-color: #27ae60;
+            --error-color: #e74c3c;
+            --bg-color: #f4f7f6;
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 15px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 700px;
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        h1 { text-align: center; font-size: 1.3rem; color: var(--primary-color); }
+
+        .instruction {
+            background: #fff3e0;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 5px solid #ff9800;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .exercise-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .sentence-row {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 5px;
+            padding: 12px;
+            background: #fafafa;
+            border-radius: 8px;
+            border: 1px solid #eee;
+            font-size: 1.1rem;
+            transition: background 0.3s;
+        }
+
+        .sentence-row.is-correct { background-color: #e8f5e9; border-color: var(--success-color); }
+        .sentence-row.is-wrong { background-color: #ffeeb2; border-color: #f39c12; }
+
+        /* Dropdown Styling */
+        select {
+            padding: 5px 10px;
+            font-size: 1rem;
+            font-weight: bold;
+            border: 2px solid #bdc3c7;
+            border-radius: 5px;
+            background: white;
+            cursor: pointer;
+            outline: none;
+            color: var(--primary-color);
+        }
+
+        select:focus { border-color: var(--accent-color); }
+
+        select.correct { border-color: var(--success-color); color: var(--success-color); }
+        select.wrong { border-color: var(--error-color); color: var(--error-color); }
+
+        /* Steuerung */
+        .footer {
+            margin-top: 30px;
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        button {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.95rem;
+            transition: 0.2s;
+        }
+
+        .btn-reset { background: #95a5a6; color: white; }
+        .btn-solution { background: var(--primary-color); color: white; }
+        button:hover { opacity: 0.8; }
+
+        @media (max-width: 500px) {
+            .sentence-row { font-size: 1rem; }
+            select { font-size: 0.95rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Endungs-Baukasten: Instrumental (Fall 5)</h1>
+    
+    <div class="instruction">
+        Wähle die richtige Endung für den Instrumental aus. Wir benutzen diese Form nach dem Wort <strong>работаю</strong> (ich arbeite als...). Direktes Feedback nach jeder Auswahl!
+    </div>
+
+    <div class="exercise-list" id="exercise-list">
+        <!-- 10 Beispiele werden per JS generiert -->
+    </div>
+
+    <div class="footer">
+        <button class="btn-reset" onclick="resetAll()">Neustart</button>
+        <button class="btn-solution" onclick="showSolution()">Lösung</button>
+    </div>
+</div>
+
+<script>
+    const data = [
+        { word: "Я работаю актёр", correct: "ом" },
+        { word: "Я работаю актрис", correct: "ой" },
+        { word: "Я работаю учител", correct: "ем" },
+        { word: "Я работаю учительниц", correct: "ей" },
+        { word: "Я работаю повар", correct: "ом" },
+        { word: "Я работаю официантк", correct: "ой" },
+        { word: "Я работаю строител", correct: "ем" },
+        { word: "Я работаю программист", correct: "ом" },
+        { word: "Я работаю медсестр", correct: "ой" },
+        { word: "Я работаю менеджер", correct: "ом" }
+    ];
+
+    const options = ["...", "ом", "ой", "ем", "ей"];
+
+    function init() {
+        const list = document.getElementById('exercise-list');
+        list.innerHTML = '';
+
+        data.forEach((item, index) => {
+            const row = document.createElement('div');
+            row.className = 'sentence-row';
+            row.id = `row-${index}`;
+
+            const text = document.createElement('span');
+            text.textContent = `${index + 1}. ${item.word}`;
+
+            const select = document.createElement('select');
+            select.id = `select-${index}`;
+            
+            options.forEach(opt => {
+                const o = document.createElement('option');
+                o.value = opt;
+                o.textContent = opt;
+                select.appendChild(o);
+            });
+
+            select.onchange = () => check(index);
+
+            const dot = document.createElement('span');
+            dot.textContent = ".";
+
+            row.appendChild(text);
+            row.appendChild(select);
+            row.appendChild(dot);
+            list.appendChild(row);
+        });
+    }
+
+    function check(index) {
+        const select = document.getElementById(`select-${index}`);
+        const row = document.getElementById(`row-${index}`);
+        const val = select.value;
+
+        if (val === "...") {
+            select.className = "";
+            row.className = "sentence-row";
+            return;
+        }
+
+        if (val === data[index].correct) {
+            select.className = "correct";
+            row.className = "sentence-row is-correct";
+        } else {
+            select.className = "wrong";
+            row.className = "sentence-row is-wrong";
+        }
+    }
+
+    function resetAll() {
+        data.forEach((_, index) => {
+            const select = document.getElementById(`select-${index}`);
+            const row = document.getElementById(`row-${index}`);
+            select.value = "...";
+            select.className = "";
+            row.className = "sentence-row";
+        });
+    }
+
+    function showSolution() {
+        data.forEach((item, index) => {
+            const select = document.getElementById(`select-${index}`);
+            const row = document.getElementById(`row-${index}`);
+            select.value = item.correct;
+            select.className = "correct";
+            row.className = "sentence-row is-correct";
+        });
+    }
+
+    init();
+</script>
+
+</body>
+</html>
