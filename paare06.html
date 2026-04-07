@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Russisch Übung: Paare finden (Fokus: Verschwinden & Farbe)</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --accent-color: #3498db;
+            --success-color: #27ae60;
+            --error-color: #e74c3c;
+            --bg-color: #f4f7f6;
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 15px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        h1 { font-size: 1.3rem; color: var(--primary-color); }
+
+        .instruction {
+            background: #e1f5fe;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 5px solid var(--accent-color);
+            font-size: 0.9rem;
+            text-align: left;
+        }
+
+        .game-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 10px;
+            margin-bottom: 30px;
+            min-height: 300px;
+        }
+
+        .tile {
+            padding: 20px 10px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1rem;
+            transition: all 0.4s ease;
+            border: 2px solid #bdc3c7;
+            background-color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 60px;
+            user-select: none;
+        }
+
+        /* Zustände */
+        .tile.selected { border-color: #f39c12; background-color: #fef9e7; transform: scale(1.05); }
+        .tile.wrong { background-color: var(--error-color); color: white; border-color: var(--error-color); }
+        
+        /* Gefunden: Verschwinden */
+        .tile.matched { opacity: 0; transform: scale(0.8); pointer-events: none; visibility: hidden; }
+
+        /* Lösung-Modus */
+        .tile.solution-mode { opacity: 1; visibility: visible; cursor: default; pointer-events: none; }
+
+        /* Footer */
+        .footer {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .control-btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            color: white;
+            font-size: 0.9rem;
+        }
+
+        .btn-reset { background: #95a5a6; }
+        .btn-solution { background: var(--primary-color); }
+
+        @media (max-width: 500px) {
+            .game-grid { grid-template-columns: 1fr 1fr; }
+            .tile { font-size: 0.9rem; padding: 15px 5px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Paare finden: Wo arbeitet wer?</h1>
+    
+    <div class="instruction">
+        Finde die Paare. Richtig gefundene Paare verschwinden vom Spielfeld. Mit „Lösung“ kannst du dir alle Paare farblich sortiert anzeigen lassen.
+    </div>
+
+    <div id="game-grid" class="game-grid"></div>
+
+    <div class="footer">
+        <button class="control-btn btn-reset" onclick="resetGame()">Neustart</button>
+        <button class="control-btn btn-solution" onclick="showSolution()">Lösung</button>
+    </div>
+</div>
+
+<script>
+    const pairs = [
+        { place: "школа", job: "учитель" },
+        { place: "институт", job: "преподаватель" },
+        { place: "кафе", job: "бариста" },
+        { place: "ресторан", job: "официант" },
+        { place: "магазин", job: "кассир" },
+        { place: "офис", job: "менеджер" },
+        { place: "поликлиника", job: "врач" },
+        { place: "театр", job: "актёр" },
+        { place: "парикмахерская", job: "парикмахер" },
+        { place: "полиция", job: "полицейский" }
+    ];
+
+    // 10 unterschiedliche Farben für die Lösung
+    const solutionColors = [
+        '#FFADAD', '#FFD6A5', '#FDFFB6', '#CAFFBF', '#9BF6FF', 
+        '#A0C4FF', '#BDB2FF', '#FFC6FF', '#FFFFFC', '#E2ECE9'
+    ];
+
+    let firstTile = null;
+
+    function init() {
+        const grid = document.getElementById('game-grid');
+        grid.innerHTML = '';
+        firstTile = null;
+
+        let tiles = [];
+        pairs.forEach((p, idx) => {
+            tiles.push({ text: p.place, pairId: idx });
+            tiles.push({ text: p.job, pairId: idx });
+        });
+
+        tiles.sort(() => Math.random() - 0.5);
+
+        tiles.forEach((t) => {
+            const div = document.createElement('div');
+            div.className = 'tile';
+            div.textContent = t.text;
+            div.dataset.pairId = t.pairId;
+            div.onclick = () => handleTileClick(div);
+            grid.appendChild(div);
+        });
+    }
+
+    function handleTileClick(clickedTile) {
+        if (clickedTile.classList.contains('matched')) return;
+
+        if (firstTile === clickedTile) {
+            clickedTile.classList.remove('selected');
+            firstTile = null;
+            return;
+        }
+
+        if (!firstTile) {
+            firstTile = clickedTile;
+            firstTile.classList.add('selected');
+        } else {
+            const id1 = firstTile.dataset.pairId;
+            const id2 = clickedTile.dataset.pairId;
+
+            if (id1 === id2) {
+                // Treffer: Beide verschwinden
+                const tempFirst = firstTile;
+                tempFirst.classList.remove('selected');
+                tempFirst.classList.add('matched');
+                clickedTile.classList.add('matched');
+                firstTile = null;
+            } else {
+                // Fehler
+                const tempFirst = firstTile;
+                clickedTile.classList.add('wrong');
+                tempFirst.classList.add('wrong');
+                tempFirst.classList.remove('selected');
+
+                setTimeout(() => {
+                    clickedTile.classList.remove('wrong');
+                    tempFirst.classList.remove('wrong');
+                }, 700);
+                firstTile = null;
+            }
+        }
+    }
+
+    function resetGame() {
+        init();
+    }
+
+    function showSolution() {
+        const tiles = document.querySelectorAll('.tile');
+        tiles.forEach(tile => {
+            const pairId = tile.dataset.pairId;
+            tile.classList.add('solution-mode');
+            tile.classList.remove('matched');
+            tile.style.backgroundColor = solutionColors[pairId];
+            tile.style.borderColor = "#333";
+            tile.style.color = "#000";
+        });
+    }
+
+    init();
+</script>
+
+</body>
+</html>
