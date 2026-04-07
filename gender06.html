@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Russisch Übung: Gender-Check</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --accent-color: #3498db;
+            --success-color: #27ae60;
+            --error-color: #e67e22;
+            --bg-color: #f4f7f6;
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 15px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        h1 { font-size: 1.3rem; color: var(--primary-color); margin-bottom: 10px; }
+
+        .instruction {
+            background: #fce4ec;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 5px solid #e91e63;
+            font-size: 0.9rem;
+            text-align: left;
+            line-height: 1.4;
+        }
+
+        /* Wort-Gitter */
+        .word-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 12px;
+            margin-bottom: 30px;
+        }
+
+        .word-card {
+            padding: 15px 10px;
+            background: #fff;
+            border: 2px solid #edf2f7;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            transition: all 0.2s ease;
+            user-select: none;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: 500;
+        }
+
+        .word-card:hover { border-color: var(--accent-color); background: #f8f9fa; }
+
+        /* Zustände */
+        .word-card.correct {
+            background-color: #e8f5e9;
+            border-color: var(--success-color);
+            color: var(--success-color);
+            box-shadow: inset 0 0 10px rgba(39, 174, 96, 0.1);
+        }
+
+        .word-card.wrong {
+            background-color: #fff3e0;
+            border-color: var(--error-color);
+            color: var(--error-color);
+        }
+
+        .word-card.missed {
+            border: 2px dashed var(--success-color);
+            color: var(--success-color);
+        }
+
+        .word-card.dimmed {
+            opacity: 0.5;
+            cursor: default;
+        }
+
+        /* Footer */
+        .footer {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .control-btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            color: white;
+            font-size: 0.9rem;
+        }
+
+        .btn-reset { background: #95a5a6; }
+        .btn-solution { background: var(--primary-color); }
+
+        @media (max-width: 500px) {
+            .word-grid { grid-template-columns: 1fr 1fr; }
+            .word-card { font-size: 0.95rem; padding: 12px 5px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Gender-Check: Nur für Frauen?</h1>
+    
+    <div class="instruction">
+        Im Russischen gibt es spezielle Formen, die man nur für Frauen benutzt. Klicke in der Liste alle Berufe an, die <strong>ausschließlich für Frauen</strong> verwendet werden. Berufe für Männer oder für beide lässt du aus.
+    </div>
+
+    <div id="word-grid" class="word-grid">
+        <!-- JS generiert die Karten -->
+    </div>
+
+    <div class="footer">
+        <button class="control-btn btn-reset" onclick="resetGame()">Neustart</button>
+        <button class="control-btn btn-solution" onclick="showSolution()">Lösung</button>
+    </div>
+</div>
+
+<script>
+    const professions = [
+        { word: "учительница", isFemaleOnly: true },
+        { word: "учитель", isFemaleOnly: false },
+        { word: "преподавательница", isFemaleOnly: true },
+        { word: "преподаватель", isFemaleOnly: false },
+        { word: "официантка", isFemaleOnly: true },
+        { word: "официант", isFemaleOnly: false },
+        { word: "начальница", isFemaleOnly: true },
+        { word: "начальник", isFemaleOnly: false },
+        { word: "уборщица", isFemaleOnly: true },
+        { word: "уборщик", isFemaleOnly: false },
+        { word: "медсестра", isFemaleOnly: true },
+        { word: "врач", isFemaleOnly: false },
+        { word: "художница", isFemaleOnly: true },
+        { word: "художник", isFemaleOnly: false },
+        { word: "певица", isFemaleOnly: true },
+        { word: "певец", isFemaleOnly: false },
+        { word: "актриса", isFemaleOnly: true },
+        { word: "актёр", isFemaleOnly: false },
+        { word: "продавщица", isFemaleOnly: true },
+        { word: "продавец", isFemaleOnly: false }
+    ];
+
+    function init() {
+        const grid = document.getElementById('word-grid');
+        grid.innerHTML = '';
+        
+        // Mischen der Liste
+        const shuffled = [...professions].sort(() => Math.random() - 0.5);
+
+        shuffled.forEach((p, idx) => {
+            const card = document.createElement('div');
+            card.className = 'word-card';
+            card.textContent = p.word;
+            card.dataset.isFemale = p.isFemaleOnly;
+            
+            card.onclick = () => {
+                if (card.classList.contains('correct') || card.classList.contains('wrong') || card.classList.contains('dimmed')) return;
+
+                if (p.isFemaleOnly) {
+                    card.classList.add('correct');
+                } else {
+                    card.classList.add('wrong');
+                }
+            };
+            
+            grid.appendChild(card);
+        });
+    }
+
+    function resetGame() {
+        init();
+    }
+
+    function showSolution() {
+        const cards = document.querySelectorAll('.word-card');
+        cards.forEach(card => {
+            const isFemale = card.dataset.isFemale === "true";
+            
+            if (isFemale) {
+                if (!card.classList.contains('correct')) {
+                    card.classList.add('missed'); // Markieren was fehlte
+                }
+                card.classList.add('correct');
+            } else {
+                card.classList.remove('wrong');
+                card.classList.add('dimmed');
+            }
+        });
+    }
+
+    init();
+</script>
+
+</body>
+</html>
