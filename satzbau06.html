@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Russisch Übung: Satzbau & Fälle</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --accent-color: #3498db;
+            --success-color: #27ae60;
+            --error-color: #e67e22;
+            --bg-color: #f4f7f6;
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 15px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 700px;
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        h1 { text-align: center; font-size: 1.3rem; color: var(--primary-color); }
+
+        .instruction {
+            background: #e1f5fe;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 5px solid var(--accent-color);
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .exercise-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .sentence-row {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 12px;
+            background: #fafafa;
+            border-radius: 8px;
+            border: 1px solid #eee;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+        }
+
+        .sentence-row.is-correct { background-color: #e8f5e9; border-color: var(--success-color); }
+        .sentence-row.is-wrong { background-color: #fff3e0; border-color: var(--error-color); }
+
+        .fixed-text { font-weight: 500; }
+
+        /* Dropdown Styling */
+        select {
+            padding: 6px 10px;
+            font-size: 1rem;
+            border: 2px solid #bdc3c7;
+            border-radius: 6px;
+            background: white;
+            cursor: pointer;
+            outline: none;
+            color: var(--primary-color);
+            font-weight: bold;
+        }
+
+        select:focus { border-color: var(--accent-color); }
+        select.correct { border-color: var(--success-color); color: var(--success-color); }
+        select.wrong { border-color: var(--error-color); color: var(--error-color); }
+
+        /* Footer */
+        .footer {
+            margin-top: 30px;
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        button {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.95rem;
+            transition: 0.2s;
+        }
+
+        .btn-reset { background: #95a5a6; color: white; }
+        .btn-solution { background: var(--primary-color); color: white; }
+        button:hover { opacity: 0.8; }
+
+        @media (max-width: 500px) {
+            .sentence-row { font-size: 1rem; padding: 10px; }
+            select { font-size: 0.9rem; max-width: 150px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Satzbau: Ich arbeite als...</h1>
+    
+    <div class="instruction">
+        Wähle die richtige Form des Berufs aus dem Menü aus. Denke daran: Nach <strong>Я работаю</strong> benötigen wir den 5. Fall (Instrumental).
+    </div>
+
+    <div class="exercise-list" id="exercise-list">
+        <!-- JS generiert die 10 Sätze -->
+    </div>
+
+    <div class="footer">
+        <button class="btn-reset" onclick="resetGame()">Neustart</button>
+        <button class="btn-solution" onclick="showSolution()">Lösung</button>
+    </div>
+</div>
+
+<script>
+    const exercises = [
+        { start: "Я работаю", options: ["учитель", "учителем", "учителя"], correct: "учителем" },
+        { start: "Я работаю", options: ["актёром", "актёр", "актёра"], correct: "актёром" },
+        { start: "Я работаю", options: ["актриса", "актрису", "актрисой"], correct: "актрисой" },
+        { start: "Я работаю", options: ["повару", "поваром", "повар"], correct: "поваром" },
+        { start: "Я работаю", options: ["директор", "директором", "директора"], correct: "директором" },
+        { start: "Я работаю", options: ["кассира", "кассир", "кассиром"], correct: "кассиром" },
+        { start: "Я работаю", options: ["официантом", "официант", "официанта"], correct: "официантом" },
+        { start: "Я работаю", options: ["инженер", "инженера", "инженером"], correct: "инженером" },
+        { start: "Я работаю", options: ["юристом", "юрист", "юристу"], correct: "юристом" },
+        { start: "Я работаю", options: ["врач", "врачом", "врача"], correct: "врачом" }
+    ];
+
+    function init() {
+        const list = document.getElementById('exercise-list');
+        list.innerHTML = '';
+
+        exercises.forEach((ex, idx) => {
+            const row = document.createElement('div');
+            row.className = 'sentence-row';
+            row.id = `row-${idx}`;
+
+            const label = document.createElement('span');
+            label.className = 'fixed-text';
+            label.textContent = `${idx + 1}. ${ex.start} `;
+
+            const select = document.createElement('select');
+            select.id = `select-${idx}`;
+            select.onchange = () => check(idx);
+
+            // Platzhalter
+            const defaultOpt = document.createElement('option');
+            defaultOpt.textContent = "...";
+            defaultOpt.value = "";
+            select.appendChild(defaultOpt);
+
+            // Antwortmöglichkeiten
+            ex.options.forEach(opt => {
+                const o = document.createElement('option');
+                o.value = opt;
+                o.textContent = opt;
+                select.appendChild(o);
+            });
+
+            const end = document.createElement('span');
+            end.textContent = ".";
+
+            row.appendChild(label);
+            row.appendChild(select);
+            row.appendChild(end);
+            list.appendChild(row);
+        });
+    }
+
+    function check(idx) {
+        const select = document.getElementById(`select-${idx}`);
+        const row = document.getElementById(`row-${idx}`);
+        const selectedValue = select.value;
+
+        if (selectedValue === "") {
+            row.className = 'sentence-row';
+            select.className = '';
+            return;
+        }
+
+        if (selectedValue === exercises[idx].correct) {
+            row.className = 'sentence-row is-correct';
+            select.className = 'correct';
+        } else {
+            row.className = 'sentence-row is-wrong';
+            select.className = 'wrong';
+        }
+    }
+
+    function resetGame() {
+        exercises.forEach((_, idx) => {
+            const select = document.getElementById(`select-${idx}`);
+            const row = document.getElementById(`row-${idx}`);
+            select.value = "";
+            select.className = "";
+            row.className = 'sentence-row';
+        });
+    }
+
+    function showSolution() {
+        exercises.forEach((ex, idx) => {
+            const select = document.getElementById(`select-${idx}`);
+            const row = document.getElementById(`row-${idx}`);
+            select.value = ex.correct;
+            select.className = 'correct';
+            row.className = 'sentence-row is-correct';
+        });
+    }
+
+    init();
+</script>
+
+</body>
+</html>
