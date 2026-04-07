@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Russisch Übung: Er oder Sie? Klassifizierung</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --accent-color: #3498db;
+            --both-color: #9b59b6; /* Lila für beide */
+            --female-color: #e91e63; /* Pink für nur weiblich */
+            --success-color: #27ae60;
+            --error-color: #e74c3c;
+            --bg-color: #f4f7f6;
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 10px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 850px;
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        h1 { font-size: 1.3rem; color: var(--primary-color); margin-bottom: 10px; }
+
+        .instruction {
+            background: #e1f5fe;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 5px solid var(--accent-color);
+            font-size: 0.9rem;
+            text-align: left;
+        }
+
+        /* Die zwei Körbe */
+        .basket-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .basket {
+            min-height: 180px;
+            padding: 15px;
+            border: 3px dashed #bdc3c7;
+            border-radius: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            background: #fafafa;
+            transition: all 0.3s;
+        }
+
+        .basket.highlight { border-color: var(--accent-color); background: #ebf5fb; }
+
+        .basket-title {
+            font-weight: bold;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+            padding: 5px;
+            border-radius: 5px;
+            color: white;
+        }
+
+        .title-both { background-color: var(--both-color); }
+        .title-female { background-color: var(--female-color); }
+
+        /* Wort-Pool */
+        .word-pool {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            padding: 15px;
+            background: #fdfdfd;
+            border: 1px solid #eee;
+            border-radius: 10px;
+            min-height: 60px;
+        }
+
+        .word-item {
+            background: #fff;
+            border: 2px solid var(--accent-color);
+            color: var(--primary-color);
+            padding: 8px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            user-select: none;
+            transition: all 0.2s;
+            font-size: 1rem;
+        }
+
+        .word-item.selected {
+            background: var(--accent-color);
+            color: white;
+            transform: scale(1.1);
+        }
+
+        .word-item.correct-both { background: var(--both-color); color: white; border-color: var(--both-color); cursor: default; }
+        .word-item.correct-female { background: var(--female-color); color: white; border-color: var(--female-color); cursor: default; }
+
+        /* Feedback-Animation */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        .error-shake { animation: shake 0.3s; border-color: var(--error-color) !important; }
+
+        /* Footer */
+        .footer {
+            margin-top: 25px;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .control-btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            color: white;
+            font-size: 0.9rem;
+        }
+
+        .btn-reset { background: #95a5a6; }
+        .btn-solution { background: var(--primary-color); }
+
+        @media (max-width: 600px) {
+            .basket-container { grid-template-columns: 1fr; }
+            .basket { min-height: 120px; }
+            .word-item { font-size: 0.9rem; padding: 6px 10px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Klassifizierung: Ein Wort oder zwei Formen?</h1>
+    
+    <div class="instruction">
+        Einige Berufe nutzen das gleiche Wort für Männer und Frauen. Andere haben eine spezielle Endung für Frauen. Klicke ein Wort an und wähle dann den richtigen Korb.
+    </div>
+
+    <div class="word-pool" id="word-pool"></div>
+
+    <div class="basket-container">
+        <div class="basket" id="basket-both" onclick="placeWord('both')">
+            <div class="basket-title title-both">Gleiche Form (Он/Она)</div>
+            <!-- Hier landen die korrekten Wörter -->
+        </div>
+        <div class="basket" id="basket-female" onclick="placeWord('female')">
+            <div class="basket-title title-female">Spezielle weibliche Form</div>
+            <!-- Hier landen die korrekten Wörter -->
+        </div>
+    </div>
+
+    <div class="footer">
+        <button class="control-btn btn-reset" onclick="resetGame()">Neustart</button>
+        <button class="control-btn btn-solution" onclick="showSolution()">Lösung</button>
+    </div>
+</div>
+
+<script>
+    const professions = [
+        { word: "врач", cat: "both" },
+        { word: "менеджер", cat: "both" },
+        { word: "юрист", cat: "both" },
+        { word: "программист", cat: "both" },
+        { word: "директор", cat: "both" },
+        { word: "ректор", cat: "both" },
+        { word: "бариста", cat: "both" },
+        { word: "повар", cat: "both" },
+        { word: "инженер", cat: "both" },
+        { word: "архитектор", cat: "both" },
+        { word: "учительница", cat: "female" },
+        { word: "официantка", cat: "female" },
+        { word: "актриса", cat: "female" },
+        { word: "медсестра", cat: "female" },
+        { word: "певица", cat: "female" },
+        { word: "начальница", cat: "female" },
+        { word: "уборщица", cat: "female" },
+        { word: "художница", cat: "female" },
+        { word: "продавщица", cat: "female" },
+        { word: "преподавательница", cat: "female" }
+    ];
+
+    // Korrektur kleiner Schreibfehler im Datenarray
+    professions[11].word = "официантка";
+
+    let selectedElem = null;
+    let selectedData = null;
+
+    function initPool() {
+        const pool = document.getElementById('word-pool');
+        pool.innerHTML = '';
+        document.getElementById('basket-both').querySelectorAll('.word-item').forEach(el => el.remove());
+        document.getElementById('basket-female').querySelectorAll('.word-item').forEach(el => el.remove());
+
+        const shuffled = [...professions].sort(() => Math.random() - 0.5);
+
+        shuffled.forEach(p => {
+            const div = document.createElement('div');
+            div.className = 'word-item';
+            div.textContent = p.word;
+            div.onclick = (e) => {
+                e.stopPropagation();
+                if (div.parentElement !== pool) return;
+                
+                document.querySelectorAll('.word-item').forEach(i => i.classList.remove('selected'));
+                selectedElem = div;
+                selectedData = p;
+                div.classList.add('selected');
+            };
+            pool.appendChild(div);
+        });
+    }
+
+    function placeWord(category) {
+        if (!selectedElem) return;
+
+        const basket = document.getElementById(`basket-${category}`);
+
+        if (selectedData.cat === category) {
+            // Richtig
+            selectedElem.classList.remove('selected');
+            selectedElem.classList.add(category === 'both' ? 'correct-both' : 'correct-female');
+            basket.appendChild(selectedElem);
+            selectedElem = null;
+            selectedData = null;
+        } else {
+            // Falsch
+            selectedElem.classList.add('error-shake');
+            setTimeout(() => {
+                if (selectedElem) selectedElem.classList.remove('error-shake');
+            }, 400);
+        }
+    }
+
+    function resetGame() {
+        selectedElem = null;
+        selectedData = null;
+        initPool();
+    }
+
+    function showSolution() {
+        resetGame();
+        const pool = document.getElementById('word-pool');
+        const basketBoth = document.getElementById('basket-both');
+        const basketFemale = document.getElementById('basket-female');
+
+        const allItems = Array.from(pool.children);
+        allItems.forEach(item => {
+            const data = professions.find(p => p.word === item.textContent);
+            if (data.cat === 'both') {
+                item.classList.add('correct-both');
+                basketBoth.appendChild(item);
+            } else {
+                item.classList.add('correct-female');
+                basketFemale.appendChild(item);
+            }
+        });
+    }
+
+    initPool();
+</script>
+
+</body>
+</html>
