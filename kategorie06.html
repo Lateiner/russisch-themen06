@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Russisch Übung: Kategorien sortieren</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --accent-color: #3498db;
+            --school-color: #f39c12;
+            --uni-color: #9b59b6;
+            --success-color: #27ae60;
+            --error-color: #e74c3c;
+            --bg-color: #f4f7f6;
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 15px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        h1 { text-align: center; font-size: 1.3rem; color: var(--primary-color); }
+
+        .instruction {
+            background: #e1f5fe;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 5px solid var(--accent-color);
+            font-size: 0.9rem;
+        }
+
+        /* Wort-Karten */
+        .card-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .prof-card {
+            background: #fff;
+            border: 2px solid #eee;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            transition: all 0.3s;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .prof-name {
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .category-btns {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .cat-btn {
+            border: none;
+            padding: 6px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: bold;
+            color: white;
+            transition: opacity 0.2s;
+        }
+
+        .btn-school { background-color: var(--school-color); }
+        .btn-uni { background-color: var(--uni-color); }
+
+        /* Feedback-Stile */
+        .prof-card.correct { border-color: var(--success-color); background-color: #f1f8e9; }
+        .prof-card.wrong { border-color: var(--error-color); background-color: #ffebee; }
+        .prof-card.solved { pointer-events: none; }
+        .prof-card.solved .cat-btn { display: none; }
+        .prof-card.solved::after {
+            content: "✓";
+            color: var(--success-color);
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        /* Footer */
+        .footer {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .control-btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            color: white;
+        }
+
+        .btn-reset { background: #95a5a6; }
+        .btn-solution { background: var(--primary-color); }
+
+        @media (max-width: 500px) {
+            .card-container { grid-template-columns: 1fr 1fr; }
+            .prof-name { font-size: 1rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Kategorien: Schule oder Universität?</h1>
+    
+    <div class="instruction">
+        Wo arbeiten diese Personen? Klicke auf die richtige Kategorie unter dem Beruf. Du erhältst sofort eine Rückmeldung.
+    </div>
+
+    <div id="card-pool" class="card-container">
+        <!-- JS generiert die Karten -->
+    </div>
+
+    <div class="footer">
+        <button class="control-btn btn-reset" onclick="resetGame()">Neustart</button>
+        <button class="control-btn btn-solution" onclick="showSolution()">Lösung</button>
+    </div>
+</div>
+
+<script>
+    const professions = [
+        { name: "учитель", cat: "Schule" },
+        { name: "декан", cat: "Uni" },
+        { name: "ректор", cat: "Uni" },
+        { name: "учительница", cat: "Schule" },
+        { name: "преподаватель", cat: "Uni" },
+        { name: "директор", cat: "Schule" },
+        { name: "преподавательница", cat: "Uni" },
+        { name: "завуч", cat: "Schule" }, // Konrektor in Schulen
+        { name: "профессор", cat: "Uni" },
+        { name: "уборщица", cat: "Schule" } // Beispiel aus dem Text für Schule/Laden
+    ];
+
+    function init() {
+        const pool = document.getElementById('card-pool');
+        pool.innerHTML = '';
+        
+        // Mischen
+        const shuffled = [...professions].sort(() => Math.random() - 0.5);
+
+        shuffled.forEach((p, idx) => {
+            const card = document.createElement('div');
+            card.className = 'prof-card';
+            card.id = `card-${idx}`;
+
+            const name = document.createElement('div');
+            name.className = 'prof-name';
+            name.textContent = p.name;
+
+            const btnContainer = document.createElement('div');
+            btnContainer.className = 'category-btns';
+
+            const schoolBtn = document.createElement('button');
+            schoolBtn.className = 'cat-btn btn-school';
+            schoolBtn.textContent = 'Schule';
+            schoolBtn.onclick = () => check(card, 'Schule', p.cat);
+
+            const uniBtn = document.createElement('button');
+            uniBtn.className = 'cat-btn btn-uni';
+            uniBtn.textContent = 'Universität';
+            uniBtn.onclick = () => check(card, 'Uni', p.cat);
+
+            btnContainer.appendChild(schoolBtn);
+            btnContainer.appendChild(uniBtn);
+            card.appendChild(name);
+            card.appendChild(btnContainer);
+            pool.appendChild(card);
+        });
+    }
+
+    function check(card, selected, correct) {
+        if (selected === correct) {
+            card.className = 'prof-card correct solved';
+        } else {
+            card.classList.add('wrong');
+            setTimeout(() => card.classList.remove('wrong'), 800);
+        }
+    }
+
+    function resetGame() {
+        init();
+    }
+
+    function showSolution() {
+        const cards = document.querySelectorAll('.prof-card');
+        cards.forEach((card) => {
+            card.className = 'prof-card correct solved';
+        });
+    }
+
+    init();
+</script>
+
+</body>
+</html>
