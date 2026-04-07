@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Russisch Übung: Wer ist der Boss?</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --accent-color: #3498db;
+            --success-color: #27ae60;
+            --error-color: #e67e22;
+            --bg-color: #f4f7f6;
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 15px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 700px;
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        h1 { text-align: center; font-size: 1.3rem; color: var(--primary-color); }
+
+        .instruction {
+            background: #e1f5fe;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 5px solid var(--accent-color);
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .quiz-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .quiz-item {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 12px;
+            background: #fafafa;
+            border-radius: 8px;
+            border: 1px solid #eee;
+            font-size: 1.05rem;
+            transition: all 0.3s ease;
+        }
+
+        .quiz-item.is-correct { background-color: #e8f5e9; border-color: var(--success-color); }
+        .quiz-item.is-wrong { background-color: #fff3e0; border-color: var(--error-color); }
+
+        .location-text { font-weight: bold; color: var(--primary-color); }
+
+        /* Dropdown Styling */
+        select {
+            padding: 6px 10px;
+            font-size: 1rem;
+            border: 2px solid #bdc3c7;
+            border-radius: 6px;
+            background: white;
+            cursor: pointer;
+            outline: none;
+            color: var(--primary-color);
+            font-weight: bold;
+        }
+
+        select.correct { border-color: var(--success-color); color: var(--success-color); }
+        select.wrong { border-color: var(--error-color); color: var(--error-color); }
+
+        /* Footer */
+        .footer {
+            margin-top: 30px;
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        button {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.95rem;
+            transition: 0.2s;
+        }
+
+        .btn-reset { background: #95a5a6; color: white; }
+        .btn-solution { background: var(--primary-color); color: white; }
+        button:hover { opacity: 0.8; }
+
+        @media (max-width: 500px) {
+            .quiz-item { font-size: 0.95rem; padding: 10px; }
+            select { font-size: 0.9rem; max-width: 140px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Кто главный? (Wer ist der Boss?)</h1>
+    
+    <div class="instruction">
+        In jeder Institution gibt es eine Person, die „das Sagen“ hat. Wähle die korrekte Bezeichnung aus dem Menü aus. Direktes Feedback nach deiner Wahl!
+    </div>
+
+    <div class="quiz-list" id="quiz-list">
+        <!-- JS generiert die 10 Fragen -->
+    </div>
+
+    <div class="footer">
+        <button class="btn-reset" onclick="resetGame()">Neustart</button>
+        <button class="btn-solution" onclick="showSolution()">Lösung</button>
+    </div>
+</div>
+
+<script>
+    const questions = [
+        { location: "В школе главный — это", options: ["декан", "директор", "ректор"], correct: "директор" },
+        { location: "В университете главный — это", options: ["ректор", "начальник", "учитель"], correct: "ректор" },
+        { location: "В институте главный — это", options: ["директор", "ректор", "преподаватель"], correct: "ректор" },
+        { location: "На факультете главный — это", options: ["ректор", "начальник", "декан"], correct: "декан" },
+        { location: "В офисе главный — это", options: ["начальник", "директор", "декан"], correct: "начальник" },
+        { location: "В офисе главная (женщина) — это", options: ["начальница", "уборщица", "официантка"], correct: "начальница" },
+        { location: "В театре главный (режиссёр) — это", options: ["актёр", "директор", "режиссёр"], correct: "режиссёр" },
+        { location: "В магазине главный — это", options: ["кассир", "директор", "продавец"], correct: "директор" },
+        { location: "В ресторане главный — это", options: ["официант", "повар", "директор"], correct: "директор" },
+        { location: "Ваш босс в офисе — это ваш", options: ["начальник", "медбрат", "бариста"], correct: "начальник" }
+    ];
+
+    function init() {
+        const list = document.getElementById('quiz-list');
+        list.innerHTML = '';
+
+        questions.forEach((q, idx) => {
+            const row = document.createElement('div');
+            row.className = 'quiz-item';
+            row.id = `row-${idx}`;
+
+            const label = document.createElement('span');
+            label.className = 'location-text';
+            label.textContent = `${idx + 1}. ${q.location} `;
+
+            const select = document.createElement('select');
+            select.id = `select-${idx}`;
+            select.onchange = () => check(idx);
+
+            // Platzhalter
+            const defaultOpt = document.createElement('option');
+            defaultOpt.textContent = "...";
+            defaultOpt.value = "";
+            select.appendChild(defaultOpt);
+
+            // Antwortmöglichkeiten (shuffled)
+            const shuffledOptions = [...q.options].sort(() => Math.random() - 0.5);
+            shuffledOptions.forEach(opt => {
+                const o = document.createElement('option');
+                o.value = opt;
+                o.textContent = opt;
+                select.appendChild(o);
+            });
+
+            const dot = document.createElement('span');
+            dot.textContent = ".";
+
+            row.appendChild(label);
+            row.appendChild(select);
+            row.appendChild(dot);
+            list.appendChild(row);
+        });
+    }
+
+    function check(idx) {
+        const select = document.getElementById(`select-${idx}`);
+        const row = document.getElementById(`row-${idx}`);
+        const selectedValue = select.value;
+
+        if (selectedValue === "") {
+            row.className = 'quiz-item';
+            select.className = '';
+            return;
+        }
+
+        if (selectedValue === questions[idx].correct) {
+            row.className = 'quiz-item is-correct';
+            select.className = 'correct';
+        } else {
+            row.className = 'quiz-item is-wrong';
+            select.className = 'wrong';
+        }
+    }
+
+    function resetGame() {
+        init();
+    }
+
+    function showSolution() {
+        questions.forEach((q, idx) => {
+            const select = document.getElementById(`select-${idx}`);
+            const row = document.getElementById(`row-${idx}`);
+            select.value = q.correct;
+            select.className = 'correct';
+            row.className = 'quiz-item is-correct';
+        });
+    }
+
+    init();
+</script>
+
+</body>
+</html>
