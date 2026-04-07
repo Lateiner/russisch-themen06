@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Russisch Übung: Verwandlungs-Aufgabe (Gender)</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --accent-color: #3498db;
+            --success-color: #27ae60;
+            --error-color: #e67e22;
+            --bg-color: #f4f7f6;
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 10px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 700px;
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        h1 { text-align: center; font-size: 1.3rem; color: var(--primary-color); margin-bottom: 15px; }
+
+        .instruction {
+            background: #f3e5f5;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 5px solid #9c27b0;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .exercise-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .exercise-card {
+            background: #fafafa;
+            border: 1px solid #eee;
+            border-radius: 10px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            transition: all 0.3s;
+        }
+
+        .masculine-form {
+            font-weight: bold;
+            font-size: 1.1rem;
+            color: var(--primary-color);
+        }
+
+        .options-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .option-btn {
+            background: white;
+            border: 2px solid var(--accent-color);
+            color: var(--accent-color);
+            padding: 8px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s;
+            font-size: 0.95rem;
+            flex: 1;
+            min-width: 120px;
+            text-align: center;
+        }
+
+        .option-btn:hover { background: #ebf5fb; }
+
+        /* Zustände */
+        .option-btn.correct {
+            background-color: var(--success-color) !important;
+            border-color: var(--success-color) !important;
+            color: white !important;
+        }
+
+        .option-btn.wrong {
+            background-color: var(--error-color) !important;
+            border-color: var(--error-color) !important;
+            color: white !important;
+        }
+
+        .option-btn.disabled {
+            opacity: 0.5;
+            cursor: default;
+            pointer-events: none;
+        }
+
+        .exercise-card.solved { border-color: var(--success-color); background-color: #f1f8e9; }
+
+        /* Footer */
+        .footer {
+            margin-top: 30px;
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        .control-btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.95rem;
+            color: white;
+        }
+
+        .btn-reset { background: #95a5a6; }
+        .btn-solution { background: var(--primary-color); }
+
+        @media (max-width: 500px) {
+            .option-btn { font-size: 0.85rem; padding: 6px 10px; }
+            .masculine-form { font-size: 1rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Die weibliche Form finden</h1>
+    
+    <div class="instruction">
+        Hier siehst du Berufe in der männlichen Form. Wähle die grammatikalisch korrekte <strong>weibliche Entsprechung</strong> aus. Direktes Feedback nach jedem Klick!
+    </div>
+
+    <div id="exercise-list" class="exercise-list">
+        <!-- JS generiert die 10 Übungen -->
+    </div>
+
+    <div class="footer">
+        <button class="control-btn btn-reset" onclick="resetGame()">Neustart</button>
+        <button class="control-btn btn-solution" onclick="showSolution()">Lösung</button>
+    </div>
+</div>
+
+<script>
+    const data = [
+        { male: "официант", options: ["официантка", "официантница"], correct: "официантка" },
+        { male: "учитель", options: ["учителька", "учительница"], correct: "учительница" },
+        { male: "актёр", options: ["актриса", "актёрка"], correct: "актриса" },
+        { male: "преподаватель", options: ["преподавательница", "преподавателька"], correct: "преподавательница" },
+        { male: "певец", options: ["певица", "певеца"], correct: "певица" },
+        { male: "уборщик", options: ["уборщица", "уборщичка"], correct: "уборщица" },
+        { male: "начальник", options: ["начальница", "начальничка"], correct: "начальница" },
+        { male: "художник", options: ["художникница", "художница"], correct: "художница" },
+        { male: "продавец", options: ["продавщица", "продавеца"], correct: "продавщица" },
+        { male: "студент", options: ["студентка", "студентница"], correct: "студентka" }
+    ];
+
+    // Korrektur kleiner Tippfehler im Datenarray
+    data[9].correct = "студентка";
+
+    function init() {
+        const list = document.getElementById('exercise-list');
+        list.innerHTML = '';
+
+        data.forEach((item, idx) => {
+            const card = document.createElement('div');
+            card.className = 'exercise-card';
+            card.id = `card-${idx}`;
+
+            const maleText = document.createElement('div');
+            maleText.className = 'masculine-form';
+            maleText.textContent = `${idx + 1}. Он — ${item.male}`;
+
+            const optionsGrid = document.createElement('div');
+            optionsGrid.className = 'options-grid';
+
+            item.options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.textContent = `Она — ${opt}`;
+                btn.onclick = () => check(btn, opt, item.correct, idx);
+                optionsGrid.appendChild(btn);
+            });
+
+            card.appendChild(maleText);
+            card.appendChild(optionsGrid);
+            list.appendChild(card);
+        });
+    }
+
+    function check(btn, selected, correct, idx) {
+        const card = document.getElementById(`card-${idx}`);
+        const buttons = card.querySelectorAll('.option-btn');
+
+        if (card.classList.contains('solved')) return;
+
+        if (selected === correct) {
+            btn.classList.add('correct');
+            card.classList.add('solved');
+            buttons.forEach(b => {
+                if (b !== btn) b.classList.add('disabled');
+            });
+        } else {
+            btn.classList.add('wrong');
+            setTimeout(() => {
+                if (!card.classList.contains('solved')) {
+                    btn.classList.remove('wrong');
+                }
+            }, 800);
+        }
+    }
+
+    function resetGame() {
+        init();
+    }
+
+    function showSolution() {
+        data.forEach((item, idx) => {
+            const card = document.getElementById(`card-${idx}`);
+            const buttons = card.querySelectorAll('.option-btn');
+            
+            card.classList.add('solved');
+            buttons.forEach(btn => {
+                if (btn.textContent.includes(item.correct)) {
+                    btn.classList.add('correct');
+                    btn.classList.remove('disabled');
+                } else {
+                    btn.classList.add('disabled');
+                    btn.classList.remove('wrong');
+                }
+            });
+        });
+    }
+
+    init();
+</script>
+
+</body>
+</html>
