@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Russisch Übung: Berufe-Bild-Zuordnung</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --accent-color: #3498db;
+            --success-color: #27ae60;
+            --error-color: #e74c3c;
+            --bg-color: #f8f9fa;
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 15px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        h1 { font-size: 1.4rem; color: var(--primary-color); margin-bottom: 10px; }
+
+        .instruction {
+            background: #e3f2fd;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 5px solid var(--accent-color);
+            font-size: 0.9rem;
+            text-align: left;
+            line-height: 1.4;
+        }
+
+        /* Gitter für die Bilder */
+        .symbol-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .drop-target {
+            background: #fff;
+            border: 2px solid #ddd;
+            border-radius: 12px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .drop-target:hover { border-color: var(--accent-color); background: #f0f7ff; }
+
+        .symbol { font-size: 3rem; }
+
+        .placeholder-box {
+            width: 100%;
+            min-height: 30px;
+            border-bottom: 2px dashed #bbb;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            font-size: 1rem;
+            transition: color 0.3s;
+        }
+
+        /* Wort-Pool */
+        .word-pool {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            padding: 15px;
+            background: #edf2f7;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        .word-tile {
+            background: var(--accent-color);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 500;
+            user-select: none;
+            transition: transform 0.2s, background 0.2s;
+        }
+
+        .word-tile.selected { background: #f39c12; transform: scale(1.1); }
+        .word-tile.used { opacity: 0.2; pointer-events: none; }
+
+        /* Feedback */
+        .placeholder-box.correct { color: var(--success-color); border-bottom: 2px solid var(--success-color); }
+        .placeholder-box.wrong { color: var(--error-color); border-bottom: 2px solid var(--error-color); }
+
+        /* Steuerung */
+        .footer {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .control-btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            color: white;
+            font-size: 0.9rem;
+        }
+
+        .btn-reset { background: #95a5a6; }
+        .btn-solution { background: var(--primary-color); }
+
+        @media (max-width: 500px) {
+            .symbol-grid { grid-template-columns: 1fr 1fr; }
+            .symbol { font-size: 2.5rem; }
+            .placeholder-box { font-size: 0.9rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Berufe und Symbole</h1>
+    
+    <div class="instruction">
+        Ordne jedem Symbol den passenden Beruf zu. Klicke zuerst auf ein blaues Wort und dann auf das entsprechende Bild.
+    </div>
+
+    <div id="symbol-grid" class="symbol-grid">
+        <!-- 10 Stationen -->
+        <div class="drop-target" onclick="placeWord(this, 'повар')">
+            <span class="symbol">👨‍🍳</span>
+            <div class="placeholder-box" data-id="1"></div>
+        </div>
+        <div class="drop-target" onclick="placeWord(this, 'учитель')">
+            <span class="symbol">👩‍🏫</span>
+            <div class="placeholder-box" data-id="2"></div>
+        </div>
+        <div class="drop-target" onclick="placeWord(this, 'врач')">
+            <span class="symbol">👨‍⚕️</span>
+            <div class="placeholder-box" data-id="3"></div>
+        </div>
+        <div class="drop-target" onclick="placeWord(this, 'бариста')">
+            <span class="symbol">☕</span>
+            <div class="placeholder-box" data-id="4"></div>
+        </div>
+        <div class="drop-target" onclick="placeWord(this, 'художник')">
+            <span class="symbol">🎨</span>
+            <div class="placeholder-box" data-id="5"></div>
+        </div>
+        <div class="drop-target" onclick="placeWord(this, 'строитель')">
+            <span class="symbol">👷</span>
+            <div class="placeholder-box" data-id="6"></div>
+        </div>
+        <div class="drop-target" onclick="placeWord(this, 'пожарный')">
+            <span class="symbol">👨‍🚒</span>
+            <div class="placeholder-box" data-id="7"></div>
+        </div>
+        <div class="drop-target" onclick="placeWord(this, 'полицейский')">
+            <span class="symbol">👮</span>
+            <div class="placeholder-box" data-id="8"></div>
+        </div>
+        <div class="drop-target" onclick="placeWord(this, 'официант')">
+            <span class="symbol">🍽️</span>
+            <div class="placeholder-box" data-id="9"></div>
+        </div>
+        <div class="drop-target" onclick="placeWord(this, 'медсестра')">
+            <span class="symbol">🩺</span>
+            <div class="placeholder-box" data-id="10"></div>
+        </div>
+    </div>
+
+    <div id="word-pool" class="word-pool"></div>
+
+    <div class="footer">
+        <button class="control-btn btn-reset" onclick="resetGame()">Neustart</button>
+        <button class="control-btn btn-solution" onclick="showSolution()">Lösung</button>
+    </div>
+</div>
+
+<script>
+    const solutionMap = {
+        "1": "повар",
+        "2": "учитель",
+        "3": "врач",
+        "4": "бариста",
+        "5": "художник",
+        "6": "строитель",
+        "7": "пожарный",
+        "8": "полицейский",
+        "9": "официант",
+        "10": "медсестра"
+    };
+
+    let selectedWord = null;
+    let selectedTileElem = null;
+
+    function initPool() {
+        const pool = document.getElementById('word-pool');
+        pool.innerHTML = '';
+        const words = Object.values(solutionMap).sort(() => Math.random() - 0.5);
+        
+        words.forEach(word => {
+            const tile = document.createElement('div');
+            tile.className = 'word-tile';
+            tile.textContent = word;
+            tile.onclick = () => {
+                document.querySelectorAll('.word-tile').forEach(t => t.classList.remove('selected'));
+                selectedWord = word;
+                selectedTileElem = tile;
+                tile.classList.add('selected');
+            };
+            pool.appendChild(tile);
+        });
+    }
+
+    function placeWord(targetDiv, correctWord) {
+        const placeholder = targetDiv.querySelector('.placeholder-box');
+        
+        if (!selectedWord) return;
+
+        // Falls schon ein Wort im Slot war, dieses im Pool wieder freischalten
+        const currentInSlot = placeholder.textContent;
+        if (currentInSlot) {
+            document.querySelectorAll('.word-tile').forEach(t => {
+                if (t.textContent === currentInSlot) t.classList.remove('used');
+            });
+        }
+
+        // Wort setzen
+        placeholder.textContent = selectedWord;
+        selectedTileElem.classList.add('used');
+        selectedTileElem.classList.remove('selected');
+
+        // Direktes Feedback
+        if (selectedWord === correctWord) {
+            placeholder.className = 'placeholder-box correct';
+        } else {
+            placeholder.className = 'placeholder-box wrong';
+        }
+
+        // Auswahl löschen
+        selectedWord = null;
+        selectedTileElem = null;
+    }
+
+    function resetGame() {
+        document.querySelectorAll('.placeholder-box').forEach(p => {
+            p.textContent = '';
+            p.className = 'placeholder-box';
+        });
+        initPool();
+        selectedWord = null;
+    }
+
+    function showSolution() {
+        document.querySelectorAll('.placeholder-box').forEach(p => {
+            const id = p.getAttribute('data-id');
+            p.textContent = solutionMap[id];
+            p.className = 'placeholder-box correct';
+        });
+        document.querySelectorAll('.word-tile').forEach(t => t.classList.add('used'));
+    }
+
+    initPool();
+</script>
+
+</body>
+</html>
