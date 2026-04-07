@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Russisch Übung: Adjektivische Berufe</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --accent-color: #3498db;
+            --success-color: #27ae60;
+            --error-color: #e74c3c;
+            --bg-color: #f4f7f6;
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 15px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 700px;
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        h1 { text-align: center; font-size: 1.3rem; color: var(--primary-color); }
+
+        .instruction {
+            background: #e1f5fe;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 5px solid var(--accent-color);
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .exercise-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .exercise-item {
+            background: #fafafa;
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid #eee;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .sentence {
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+
+        .options-container {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .option-btn {
+            padding: 8px 16px;
+            background: white;
+            border: 2px solid var(--accent-color);
+            color: var(--accent-color);
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s ease;
+            font-size: 0.95rem;
+        }
+
+        .option-btn:hover {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        /* Zustände */
+        .option-btn.correct {
+            background: var(--success-color) !important;
+            border-color: var(--success-color) !important;
+            color: white !important;
+        }
+
+        .option-btn.wrong {
+            background: var(--error-color) !important;
+            border-color: var(--error-color) !important;
+            color: white !important;
+        }
+
+        .option-btn.disabled {
+            opacity: 0.6;
+            cursor: default;
+        }
+
+        /* Footer */
+        .footer {
+            margin-top: 30px;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        button.control-btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.9rem;
+            transition: 0.2s;
+        }
+
+        .btn-reset { background: #95a5a6; color: white; }
+        .btn-solution { background: var(--primary-color); color: white; }
+
+        @media (max-width: 500px) {
+            .sentence { font-size: 1rem; }
+            .option-btn { font-size: 0.85rem; padding: 6px 12px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Adjektivische Endungen bei Berufen</h1>
+    
+    <div class="instruction">
+        Berufe wie <strong>пожарный</strong> und <strong>полицейский</strong> werden wie Adjektive gebeugt. Wähle die korrekte Form für den Satz aus. Direktes Feedback nach dem Klick!
+    </div>
+
+    <div id="exercise-list" class="exercise-list">
+        <!-- JS generiert die 10 Beispiele -->
+    </div>
+
+    <div class="footer">
+        <button class="control-btn btn-reset" onclick="resetGame()">Neustart</button>
+        <button class="control-btn btn-solution" onclick="showSolution()">Lösung</button>
+    </div>
+</div>
+
+<script>
+    const exercises = [
+        { q: "Я работаю...", options: ["пожарным", "пожарный", "пожарного"], correct: "пожарным" },
+        { q: "Я работаю...", options: ["полицейский", "полицейским", "полицейского"], correct: "полицейским" },
+        { q: "Он работает...", options: ["пожарным", "пожарному", "пожарный"], correct: "пожарным" },
+        { q: "Она работает...", options: ["полицейский", "полицейскую", "полицейским"], correct: "полицейским" },
+        { q: "Мой папа работает...", options: ["пожарный", "пожарным", "пожарном"], correct: "пожарным" },
+        { q: "Мой брат работает...", options: ["полицейским", "полицейский", "полицейских"], correct: "полицейским" },
+        { q: "Вы работаете...", options: ["пожарному", "пожарным", "пожарный"], correct: "пожарным" },
+        { q: "Ты работаешь...", options: ["полицейский", "полицейским", "полицейскому"], correct: "полицейским" },
+        { q: "Он хочет работать...", options: ["пожарным", "пожарный", "пожарном"], correct: "пожарным" },
+        { q: "Она мечтает работать...", options: ["полицейский", "полицейским", "полицейских"], correct: "полицейским" }
+    ];
+
+    function init() {
+        const list = document.getElementById('exercise-list');
+        list.innerHTML = '';
+
+        exercises.forEach((ex, idx) => {
+            const item = document.createElement('div');
+            item.className = 'exercise-item';
+            item.id = `item-${idx}`;
+
+            const qText = document.createElement('div');
+            qText.className = 'sentence';
+            qText.textContent = `${idx + 1}. ${ex.q}`;
+
+            const optionsDiv = document.createElement('div');
+            optionsDiv.className = 'options-container';
+
+            ex.options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.textContent = opt;
+                btn.onclick = () => check(btn, opt, ex.correct, idx);
+                optionsDiv.appendChild(btn);
+            });
+
+            item.appendChild(qText);
+            item.appendChild(optionsDiv);
+            list.appendChild(item);
+        });
+    }
+
+    function check(clickedBtn, selected, correct, itemIdx) {
+        const parent = clickedBtn.parentElement;
+        const buttons = parent.querySelectorAll('.option-btn');
+
+        // Nur prüfen, wenn noch nicht gelöst
+        if (parent.classList.contains('solved')) return;
+
+        if (selected === correct) {
+            clickedBtn.classList.add('correct');
+            parent.classList.add('solved');
+            // Andere Buttons deaktivieren
+            buttons.forEach(b => {
+                if (b !== clickedBtn) b.classList.add('disabled');
+            });
+        } else {
+            clickedBtn.classList.add('wrong');
+            // Kurze Sperre oder Korrekturmöglichkeit lassen
+            setTimeout(() => {
+                if (!parent.classList.contains('solved')) {
+                    clickedBtn.classList.remove('wrong');
+                }
+            }, 1000);
+        }
+    }
+
+    function resetGame() {
+        init();
+    }
+
+    function showSolution() {
+        exercises.forEach((ex, idx) => {
+            const parent = document.getElementById(`item-${idx}`).querySelector('.options-container');
+            const buttons = parent.querySelectorAll('.option-btn');
+            
+            parent.classList.add('solved');
+            buttons.forEach(btn => {
+                if (btn.textContent === ex.correct) {
+                    btn.classList.add('correct');
+                    btn.classList.remove('disabled');
+                } else {
+                    btn.classList.add('disabled');
+                    btn.classList.remove('wrong');
+                }
+            });
+        });
+    }
+
+    init();
+</script>
+
+</body>
+</html>
