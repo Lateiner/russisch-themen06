@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lernkartei: Russisch Berufe & Verben</title>
+    <style>
+        :root {
+            --primary-green: #2e7d32;
+            --light-green: #e8f5e9;
+            --accent-green: #4caf50;
+            --dark-green: #1b5e20;
+            --text-color: #333;
+            --card-bg: #ffffff;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, var(--light-green) 0%, #c8e6c9 100%);
+            color: var(--text-color);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            padding: 20px;
+            text-align: center;
+            box-sizing: border-box;
+        }
+
+        h1 {
+            color: var(--dark-green);
+            margin-bottom: 10px;
+            font-size: 1.8rem;
+        }
+
+        .progress {
+            margin-bottom: 20px;
+            font-weight: bold;
+            color: var(--primary-green);
+            background: rgba(255, 255, 255, 0.5);
+            padding: 5px 15px;
+            border-radius: 20px;
+            display: inline-block;
+        }
+
+        /* Flashcard 3D Flip Layout */
+        .flashcard-container {
+            perspective: 1000px;
+            width: 100%;
+            height: 300px;
+            margin: 0 auto 30px auto;
+            cursor: pointer;
+        }
+
+        .flashcard {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            transform-style: preserve-3d;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            border-radius: 15px;
+        }
+
+        .flashcard.flipped {
+            transform: rotateY(180deg);
+        }
+
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            box-sizing: border-box;
+            border-radius: 15px;
+            background: var(--card-bg);
+            border: 4px solid var(--primary-green);
+        }
+
+        .card-back {
+            transform: rotateY(180deg);
+            background-color: var(--light-green);
+        }
+
+        .card-content {
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            hyphens: auto;
+            width: 100%;
+        }
+
+        /* Dynamische Schriftgrößen */
+        .size-large { font-size: 2.2rem; font-weight: bold; }
+        .size-medium { font-size: 1.6rem; font-weight: bold; }
+        .size-small { font-size: 1.2rem; font-weight: bold; }
+
+        /* Controls */
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        button {
+            padding: 12px 15px;
+            border: none;
+            border-radius: 8px;
+            background-color: var(--primary-green);
+            color: white;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        button:hover {
+            background-color: var(--dark-green);
+        }
+
+        button:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .btn-secondary {
+            background-color: #607d8b;
+        }
+
+        .full-width {
+            grid-column: span 2;
+        }
+
+        .hint {
+            margin-top: 20px;
+            font-size: 0.85rem;
+            color: var(--dark-green);
+            opacity: 0.7;
+        }
+
+        @media (max-width: 480px) {
+            .flashcard-container { height: 250px; }
+            .size-large { font-size: 1.8rem; }
+            button { font-size: 0.9rem; padding: 10px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Russisch Lernkartei</h1>
+    <div class="progress" id="progress">1 / 99</div>
+
+    <div class="flashcard-container" id="cardContainer">
+        <div class="flashcard" id="flashcard">
+            <div class="card-face card-front">
+                <div class="card-content" id="frontText">Lädt...</div>
+            </div>
+            <div class="card-face card-back">
+                <div class="card-content" id="backText">Lädt...</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <button class="btn-secondary" onclick="shuffleCards()">🔀 Mischen</button>
+        <button class="btn-secondary" onclick="resetToStart()">🏠 An den Anfang</button>
+        <button class="full-width" onclick="prevCard()">← Vorherige</button>
+        <button class="full-width" onclick="nextCard()">Nächste →</button>
+    </div>
+
+    <div class="hint">
+        Tipp: Leertaste zum Drehen, Pfeiltasten zum Navigieren.
+    </div>
+</div>
+
+<script>
+    const rawData = `1.	профе́ссия – Beruf
+2.	рабо́тать / порабо́тать – arbeiten
+3.	получа́ть / получи́ть – bekommen, erhalten
+4.	де́ньги – Geld
+5.	зарпла́та – Gehalt, Lohn
+6.	шко́ла – Schule
+7.	учи́тель – Lehrer
+8.	учи́тельница – Lehrerin
+9.	дире́ктор – Direktor
+10.	институ́т – Institut
+11.	университе́т – Universität
+12.	преподава́тель – Lehrkraft, Dozent
+13.	преподава́тельница – Lehrkraft (f), Dozentin
+14.	ре́ктор – Rektor
+15.	дека́н – Dekan
+16.	факульте́т – Fakultät
+17.	кафе́ – Café
+18.	рестора́н – Restaurant
+19.	по́вар – Koch
+20.	гото́вить / пригото́вить – kochen, zubereiten
+21.	официа́нт – Kellner
+22.	официа́нтка – Kellnerin
+23.	приноси́ть / принести́ – bringen
+24.	бариста́ – Barista
+25.	музыка́нт – Musiker
+26.	певе́ц – Sänger
+27.	певи́ца – Sängerin
+28.	петь / спеть – singen
+29.	магази́н – Laden, Geschäft
+30.	убо́рщик – Reinigungskraft (m)
+31.	убо́рщица – Reinigungskraft (f)
+32.	убира́ть / убра́ть – aufräumen, reinigen
+33.	касси́р – Kassierer
+34.	продава́вец – Verkäufer
+35.	продавщи́ца – Verkäuferin
+36.	продава́ть / прода́ть – verkaufen
+37.	о́фис – Büro
+38.	нача́льник – Chef, Vorgesetzter
+39.	нача́льница – Chefin, Vorgesetzte
+40.	ме́неджер – Manager
+41.	юри́ст – Jurist
+42.	бухга́лтер – Buchhalter
+43.	плати́ть / заплати́ть – bezahlen
+44.	программи́ст – Programmierer
+45.	писа́ть / написа́ть – schreiben
+46.	поликли́ника – Poliklinik, Gesundheitszentrum
+47.	больни́ца – Krankenhaus
+48.	врач – Arzt
+49.	лечи́ть / вы́лечить – heilen, behandeln
+50.	медсестра́ – Krankenschwester
+51.	медбра́т – Krankenpfleger
+52.	помога́ть / помо́чь – helfen
+53.	теа́тр – Theater
+54.	актёр – Schauspieler
+55.	актри́са – Schauspielerin
+56.	худо́жник – Künstler
+57.	худо́жница – Künstlerin
+58.	декора́ция – Dekoration, Bühnenbild
+59.	сце́на – Bühne
+60.	режиссёр – Regisseur
+61.	го́род – Stadt
+62.	архите́ктор – Architekt
+63.	строи́тель – Bauarbeiter
+64.	стро́ить / постро́ить – bauen
+65.	инжене́р – Ingenieur
+66.	пожа́рный – Feuerwehrmann
+67.	полице́йский – Polizist
+68.	парикма́херская – Friseursalon
+69.	парикма́хер – Friseur
+70.	води́тель – Fahrer
+71.	води́ть / повести́ – führen, lenken, fahren
+72.	охра́нник – Wachmann, Sicherheitskraft
+73.	заво́д – Werk, Fabrik
+74.	подпи́счик – Abonnent
+75.	подде́рживать / поддержа́ть – unterstützen
+76.	кана́л – Kanal
+77.	извиня́ть / извини́ть – entschuldigen
+78.	ссы́лка – Link
+79.	па́деж – Fall (Grammatik)
+80.	твори́тельный па́деж – Instrumental (5. Fall)
+81.	предло́жный па́деж – Präpositional (6. Fall)
+82.	зада́ние – Aufgabe
+83.	упражне́ние – Übung
+84.	проверя́ть / прове́рить – prüfen, kontrollieren
+85.	отве́т – Antwort
+86.	отвеча́ть / отве́тить – antworten
+87.	дикта́нт – Diktat
+88.	слу́шать / послу́шать – hören, zuhören
+89.	предложе́ние – Satz
+90.	понима́ть / поня́ть – verstehen
+91.	вспомина́ть / вспо́мнить – sich erinnern
+92.	сра́внивать / сравни́ть – vergleichen
+93.	испо́льзовать / воспо́льзоваться – benutzen, verwenden
+94.	реза́ть / пореза́ть – schneiden
+95.	вари́ть / свари́ть – kochen (im Wasser)
+96.	разгова́ривать / поговори́ть – sich unterhalten
+97.	зака́з – Bestellung
+98.	това́р – Ware
+99.	уда́ча – Glück, Erfolg`;
+
+    let cards = [];
+    let currentIndex = 0;
+    let isFlipped = false;
+
+    // Daten parsen
+    function parseData() {
+        const lines = rawData.trim().split('\n');
+        cards = lines.map(line => {
+            // Entferne die Nummerierung am Anfang (z.B. "1. ")
+            const content = line.replace(/^\d+\.\s+/, '');
+            // Trenne Vorder- und Rückseite
+            const parts = content.split(' – ');
+            return {
+                front: parts[0] ? parts[0].trim() : '',
+                back: parts[1] ? parts[1].trim() : ''
+            };
+        });
+    }
+
+    function updateCard() {
+        const card = cards[currentIndex];
+        const frontElem = document.getElementById('frontText');
+        const backElem = document.getElementById('backText');
+        const flashcard = document.getElementById('flashcard');
+
+        // Flip zurücksetzen bei Kartenwechsel
+        isFlipped = false;
+        flashcard.classList.remove('flipped');
+
+        frontElem.textContent = card.front;
+        backElem.textContent = card.back;
+
+        // Schriftgröße anpassen
+        applyFontSize(frontElem, card.front);
+        applyFontSize(backElem, card.back);
+
+        document.getElementById('progress').textContent = `${currentIndex + 1} / ${cards.length}`;
+    }
+
+    function applyFontSize(elem, text) {
+        elem.classList.remove('size-large', 'size-medium', 'size-small');
+        if (text.length < 15) {
+            elem.classList.add('size-large');
+        } else if (text.length < 30) {
+            elem.classList.add('size-medium');
+        } else {
+            elem.classList.add('size-small');
+        }
+    }
+
+    function toggleFlip() {
+        isFlipped = !isFlipped;
+        document.getElementById('flashcard').classList.toggle('flipped', isFlipped);
+    }
+
+    function nextCard() {
+        if (currentIndex < cards.length - 1) {
+            currentIndex++;
+            updateCard();
+        } else {
+            // Optional: Zum Anfang springen
+            currentIndex = 0;
+            updateCard();
+        }
+    }
+
+    function prevCard() {
+        if (currentIndex > 0) {
+            currentIndex--;
+            updateCard();
+        }
+    }
+
+    function shuffleCards() {
+        // Fisher-Yates Shuffle
+        for (let i = cards.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [cards[i], cards[j]] = [cards[j], cards[i]];
+        }
+        currentIndex = 0;
+        updateCard();
+    }
+
+    function resetToStart() {
+        currentIndex = 0;
+        updateCard();
+    }
+
+    // Keyboard Controls
+    document.addEventListener('keydown', (e) => {
+        if (e.code === 'Space' || e.code === 'Enter') {
+            e.preventDefault(); // Verhindert Scrollen bei Leertaste
+            toggleFlip();
+        } else if (e.code === 'ArrowRight') {
+            nextCard();
+        } else if (e.code === 'ArrowLeft') {
+            prevCard();
+        } else if (e.code === 'Home') {
+            resetToStart();
+        }
+    });
+
+    // Touch/Click Control
+    document.getElementById('cardContainer').addEventListener('click', toggleFlip);
+
+    // Initialisierung
+    parseData();
+    updateCard();
+</script>
+
+</body>
+</html>
