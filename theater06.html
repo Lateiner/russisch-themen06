@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Russisch Übung: Theater-Suchbild</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --accent-color: #3498db;
+            --success-color: #27ae60;
+            --error-color: #e74c3c;
+            --bg-color: #f4f7f6;
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 10px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1000px;
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        h1 { font-size: 1.3rem; color: var(--primary-color); margin-bottom: 10px; }
+
+        .instruction {
+            background: #fff3e0;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 5px solid #ff9800;
+            font-size: 0.9rem;
+            text-align: left;
+        }
+
+        /* Wort-Pool */
+        .word-pool {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            padding: 15px;
+            background: #edf2f7;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .word-tile {
+            background: var(--accent-color);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            user-select: none;
+            transition: transform 0.2s, background 0.2s;
+        }
+
+        .word-tile.selected { background: #f39c12; transform: scale(1.1); }
+        .word-tile.used { opacity: 0.2; pointer-events: none; }
+
+        /* Bild-Container */
+        .image-wrapper {
+            position: relative;
+            width: 100%;
+            /* Das Bild behält sein Seitenverhältnis */
+            display: inline-block;
+            overflow: hidden;
+            border-radius: 10px;
+            border: 3px solid #333;
+        }
+
+        .theater-image {
+            width: 100%;
+            display: block;
+            height: auto;
+        }
+
+        /* Drop-Zonen (Marker) */
+        .drop-zone {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background: rgba(255, 255, 255, 0.4);
+            border: 2px solid white;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            z-index: 10;
+            transition: all 0.3s;
+        }
+
+        .drop-zone::after {
+            content: '?';
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .drop-zone.correct {
+            width: auto;
+            height: auto;
+            padding: 4px 10px;
+            border-radius: 5px;
+            background: var(--success-color);
+            border: 1px solid white;
+            z-index: 20;
+        }
+
+        .drop-zone.correct::after {
+            content: attr(data-display);
+            font-size: 12px;
+        }
+
+        .drop-zone.wrong {
+            background: var(--error-color);
+            border-color: white;
+        }
+
+        /* Footer */
+        .footer {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .control-btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            color: white;
+        }
+
+        .btn-reset { background: #95a5a6; }
+        .btn-solution { background: var(--primary-color); }
+
+        /* Mobile Anpassung */
+        @media (max-width: 600px) {
+            .drop-zone { width: 20px; height: 20px; }
+            .drop-zone::after { font-size: 10px; }
+            .drop-zone.correct { padding: 2px 5px; }
+            .drop-zone.correct::after { font-size: 9px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Theater-Suche: Wer macht was?</h1>
+    
+    <div class="instruction">
+        Tippe auf ein Wort im Pool und dann auf den passenden Punkt im Bild. Werde zum Experten für das russische Theater!
+    </div>
+
+    <div id="word-pool" class="word-pool"></div>
+
+    <div class="image-wrapper">
+        <!-- ERSETZE 'theater.jpg' DURCH DEINEN BILD-PFAD -->
+        <img src="theater.jpg" alt="Theater" class="theater-image" id="main-img">
+
+        <!-- Interaktive Zonen basierend auf deinem Bild -->
+        <div class="drop-zone" style="top: 5%; left: 38%;" data-answer="театр"></div>
+        <div class="drop-zone" style="top: 60%; left: 9%;" data-answer="режиссёр"></div>
+        <div class="drop-zone" style="top: 15%; left: 65%;" data-answer="занавес"></div>
+        <div class="drop-zone" style="top: 45%; left: 65%;" data-answer="декорации"></div>
+        <div class="drop-zone" style="top: 72%; left: 65%;" data-answer="сцена"></div>
+        <div class="drop-zone" style="top: 85%; left: 50%;" data-answer="зрители"></div>
+        <div class="drop-zone" style="top: 60%; left: 62%;" data-answer="актёр"></div>
+        <div class="drop-zone" style="top: 62%; left: 68%;" data-answer="актриса"></div>
+        <div class="drop-zone" style="top: 65%; left: 88%;" data-answer="художница"></div>
+        <div class="drop-zone" style="top: 62%; left: 96%;" data-answer="художник"></div>
+    </div>
+
+    <div class="footer">
+        <button class="control-btn btn-reset" onclick="resetGame()">Neustart</button>
+        <button class="control-btn btn-solution" onclick="showSolution()">Lösung</button>
+    </div>
+</div>
+
+<script>
+    const words = ["актёр", "актриса", "режиссёр", "художник", "художница", "декорации", "сцена", "театр", "зрители", "занавес"];
+    let selectedWord = null;
+    let selectedTile = null;
+
+    function initPool() {
+        const pool = document.getElementById('word-pool');
+        pool.innerHTML = '';
+        [...words].sort(() => Math.random() - 0.5).forEach(word => {
+            const tile = document.createElement('div');
+            tile.className = 'word-tile';
+            tile.textContent = word;
+            tile.onclick = () => {
+                document.querySelectorAll('.word-tile').forEach(t => t.classList.remove('selected'));
+                selectedWord = word;
+                selectedTile = tile;
+                tile.classList.add('selected');
+            };
+            pool.appendChild(tile);
+        });
+    }
+
+    document.querySelectorAll('.drop-zone').forEach(zone => {
+        zone.onclick = () => {
+            if (!selectedWord) return;
+
+            // Altes Wort freigeben
+            const current = zone.getAttribute('data-display');
+            if (current) {
+                document.querySelectorAll('.word-tile.used').forEach(t => {
+                    if (t.textContent === current) t.classList.remove('used');
+                });
+            }
+
+            zone.setAttribute('data-display', selectedWord);
+            selectedTile.classList.add('used');
+            selectedTile.classList.remove('selected');
+
+            if (selectedWord === zone.getAttribute('data-answer')) {
+                zone.className = 'drop-zone correct';
+            } else {
+                zone.className = 'drop-zone wrong';
+                setTimeout(() => {
+                    if (zone.className.includes('wrong')) {
+                        zone.className = 'drop-zone';
+                        zone.removeAttribute('data-display');
+                        // Wort wieder im Pool freigeben bei Fehler
+                        const usedWord = selectedWord;
+                         document.querySelectorAll('.word-tile.used').forEach(t => {
+                            if (t.textContent === usedWord) t.classList.remove('used');
+                        });
+                    }
+                }, 1000);
+            }
+            selectedWord = null;
+        };
+    });
+
+    function resetGame() {
+        document.querySelectorAll('.drop-zone').forEach(z => {
+            z.className = 'drop-zone';
+            z.removeAttribute('data-display');
+        });
+        initPool();
+    }
+
+    function showSolution() {
+        document.querySelectorAll('.drop-zone').forEach(z => {
+            const ans = z.getAttribute('data-answer');
+            z.setAttribute('data-display', ans);
+            z.className = 'drop-zone correct';
+        });
+        document.querySelectorAll('.word-tile').forEach(t => t.classList.add('used'));
+    }
+
+    initPool();
+</script>
+
+</body>
+</html>
