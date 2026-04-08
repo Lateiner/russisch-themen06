@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Russisch Übung: Tätigkeits-Matching (Verschwinden & Farbe)</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --accent-color: #3498db;
+            --success-color: #27ae60;
+            --error-color: #e74c3c;
+            --bg-color: #f4f7f6;
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 10px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        h1 { font-size: 1.3rem; color: var(--primary-color); margin-bottom: 10px; }
+
+        .instruction {
+            background: #e1f5fe;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 5px solid var(--accent-color);
+            font-size: 0.9rem;
+            text-align: left;
+        }
+
+        .matching-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 30px;
+            min-height: 400px; /* Verhindert das Springen des Layouts */
+        }
+
+        .column {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .column-title {
+            font-size: 0.8rem;
+            font-weight: bold;
+            color: #7f8c8d;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .item {
+            padding: 12px;
+            background: #fff;
+            border: 2px solid #edf2f7;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            transition: all 0.4s ease;
+            user-select: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 45px;
+        }
+
+        .item.selected { background-color: var(--accent-color); color: white; border-color: var(--accent-color); transform: scale(1.02); }
+        .item.wrong { background-color: var(--error-color); color: white; border-color: var(--error-color); }
+
+        /* Wenn gefunden: Verschwinden */
+        .item.matched { opacity: 0; transform: scale(0.8); pointer-events: none; visibility: hidden; }
+
+        /* Lösung-Modus: Wieder einblenden mit Farbe */
+        .item.solution-mode { opacity: 1; visibility: visible; cursor: default; border-color: #333; color: #000; font-weight: bold; }
+
+        /* Footer */
+        .footer {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .control-btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            color: white;
+            font-size: 0.9rem;
+        }
+
+        .btn-reset { background: #95a5a6; }
+        .btn-solution { background: var(--primary-color); }
+
+        @media (max-width: 600px) {
+            .matching-grid { grid-template-columns: 1fr; gap: 20px; min-height: auto; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Logik: Wer macht was?</h1>
+    
+    <div class="instruction">
+        Finde die Paare. Korrekt gefundene Paare verschwinden. Mit „Lösung“ kannst du dir alle Paare farblich sortiert anzeigen lassen.
+    </div>
+
+    <div class="matching-grid">
+        <div class="column" id="activity-col">
+            <div class="column-title">Tätigkeit</div>
+        </div>
+        <div class="column" id="profession-col">
+            <div class="column-title">Beruf</div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <button class="control-btn btn-reset" onclick="resetGame()">Neustart</button>
+        <button class="control-btn btn-solution" onclick="showSolution()">Lösung</button>
+    </div>
+</div>
+
+<script>
+    const data = [
+        { activity: "делает кофе", job: "бариста" },
+        { activity: "пишет программы", job: "программист" },
+        { activity: "готовит еду", job: "повар" },
+        { activity: "приносит еду", job: "официант" },
+        { activity: "поёт песни", job: "певица" },
+        { activity: "лечит людей", job: "врач" },
+        { activity: "работает в школе", job: "учитель" },
+        { activity: "убирает магазин", job: "уборщица" },
+        { activity: "считает деньги", job: "бухгалтер" },
+        { activity: "играет в театре", job: "актёр" }
+    ];
+
+    // 10 Farben für die Lösung
+    const solutionColors = [
+        '#FFADAD', '#FFD6A5', '#FDFFB6', '#CAFFBF', '#9BF6FF', 
+        '#A0C4FF', '#BDB2FF', '#FFC6FF', '#FFFFFC', '#E2ECE9'
+    ];
+
+    let selectedActivity = null;
+    let selectedJob = null;
+
+    function init() {
+        const actCol = document.getElementById('activity-col');
+        const profCol = document.getElementById('profession-col');
+        
+        actCol.innerHTML = '<div class="column-title">Tätigkeit</div>';
+        profCol.innerHTML = '<div class="column-title">Beruf</div>';
+
+        const acts = data.map((d, i) => ({ text: d.activity, id: i }));
+        const jobs = data.map((d, i) => ({ text: d.job, id: i }));
+
+        acts.sort(() => Math.random() - 0.5);
+        jobs.sort(() => Math.random() - 0.5);
+
+        acts.forEach(a => {
+            const div = document.createElement('div');
+            div.className = 'item';
+            div.textContent = a.text;
+            div.dataset.id = a.id;
+            div.onclick = () => selectItem(div, 'activity');
+            actCol.appendChild(div);
+        });
+
+        jobs.forEach(j => {
+            const div = document.createElement('div');
+            div.className = 'item';
+            div.textContent = j.text;
+            div.dataset.id = j.id;
+            div.onclick = () => selectItem(div, 'job');
+            profCol.appendChild(div);
+        });
+    }
+
+    function selectItem(elem, type) {
+        if (elem.classList.contains('matched')) return;
+
+        if (type === 'activity') {
+            document.querySelectorAll('#activity-col .item').forEach(i => i.classList.remove('selected'));
+            selectedActivity = elem;
+        } else {
+            document.querySelectorAll('#profession-col .item').forEach(i => i.classList.remove('selected'));
+            selectedJob = elem;
+        }
+
+        elem.classList.add('selected');
+
+        if (selectedActivity && selectedJob) {
+            checkMatch();
+        }
+    }
+
+    function checkMatch() {
+        if (selectedActivity.dataset.id === selectedJob.dataset.id) {
+            const a = selectedActivity;
+            const j = selectedJob;
+            a.classList.add('matched');
+            j.classList.add('matched');
+            selectedActivity = null;
+            selectedJob = null;
+        } else {
+            const a = selectedActivity;
+            const j = selectedJob;
+            a.classList.add('wrong');
+            j.classList.add('wrong');
+            setTimeout(() => {
+                a.classList.remove('wrong', 'selected');
+                j.classList.remove('wrong', 'selected');
+            }, 600);
+            selectedActivity = null;
+            selectedJob = null;
+        }
+    }
+
+    function resetGame() {
+        selectedActivity = null;
+        selectedJob = null;
+        init();
+    }
+
+    function showSolution() {
+        const items = document.querySelectorAll('.item');
+        items.forEach(item => {
+            const id = item.dataset.id;
+            item.classList.add('solution-mode');
+            item.classList.remove('matched', 'selected', 'wrong');
+            item.style.backgroundColor = solutionColors[id];
+        });
+    }
+
+    init();
+</script>
+
+</body>
+</html>
