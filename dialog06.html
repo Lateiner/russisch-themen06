@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Russisch Übung: Dialog-Logik im Laden</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --accent-color: #3498db;
+            --success-color: #27ae60;
+            --error-color: #e74c3c;
+            --bg-color: #f4f7f6;
+            --seller-color: #3498db;
+            --cleaner-color: #9b59b6;
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 10px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        h1 { font-size: 1.3rem; color: var(--primary-color); margin-bottom: 10px; }
+
+        .instruction {
+            background: #e1f5fe;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 5px solid var(--accent-color);
+            font-size: 0.9rem;
+            text-align: left;
+        }
+
+        .dialog-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            min-height: 300px;
+        }
+
+        .dialog-card {
+            background: #fff;
+            border: 2px solid #eee;
+            border-radius: 12px;
+            padding: 15px;
+            transition: all 0.4s ease;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        /* Verschwinden bei Erfolg */
+        .dialog-card.matched {
+            opacity: 0;
+            transform: scale(0.9);
+            pointer-events: none;
+            display: none;
+        }
+
+        /* Lösung-Modus */
+        .dialog-card.solution-mode {
+            display: flex !important;
+            opacity: 1 !important;
+            transform: scale(1) !important;
+            border-color: #333;
+        }
+
+        .customer-line {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            text-align: left;
+        }
+
+        .customer-line span {
+            color: #7f8c8d;
+            font-size: 0.8rem;
+            display: block;
+            text-transform: uppercase;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .choice-btn {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid #bdc3c7;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        .choice-btn:hover { background: #f8f9fa; border-color: var(--accent-color); }
+
+        /* Statusfarben */
+        .choice-btn.correct-choice { background-color: var(--success-color); color: white; border-color: var(--success-color); }
+        .choice-btn.wrong-choice { background-color: var(--error-color); color: white; border-color: var(--error-color); }
+
+        /* Footer */
+        .footer {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .control-btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            color: white;
+        }
+
+        .btn-reset { background: #95a5a6; }
+        .btn-solution { background: var(--primary-color); }
+
+        @media (max-width: 500px) {
+            .customer-line { font-size: 1rem; }
+            .choice-btn { font-size: 0.8rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Dialog-Logik: Verkäufer oder Reinigungskraft?</h1>
+    
+    <div class="instruction">
+        Ein Kunde spricht. Wer sollte antworten? Klicke auf die richtige Person. Korrekte Antworten verschwinden. Die Lösung zeigt alles farblich sortiert an.
+    </div>
+
+    <div id="dialog-list" class="dialog-list"></div>
+
+    <div class="footer">
+        <button class="control-btn btn-reset" onclick="resetGame()">Neustart</button>
+        <button class="control-btn btn-solution" onclick="showSolution()">Lösung</button>
+    </div>
+</div>
+
+<script>
+    const dialogs = [
+        { text: "Где молоко?", role: "продавец" },
+        { text: "Тут очень грязно!", role: "уборщица" },
+        { text: "Сколько это стоит?", role: "продавец" },
+        { text: "Тут разлита вода.", role: "уборщица" },
+        { text: "Дайте хлеб, пожалуйста.", role: "продавец" },
+        { text: "У вас есть яблоки?", role: "продавец" },
+        { text: "Тут мусор на полу.", role: "уборщица" },
+        { text: "Где касса?", role: "продавец" },
+        { text: "Помойте здесь, пожалуйста.", role: "уборщица" },
+        { text: "Я хочу купить рыбу.", role: "продавец" }
+    ];
+
+    function init() {
+        const list = document.getElementById('dialog-list');
+        list.innerHTML = '';
+        
+        // Mischen der Dialoge
+        const shuffled = [...dialogs].sort(() => Math.random() - 0.5);
+
+        shuffled.forEach((d, idx) => {
+            const card = document.createElement('div');
+            card.className = 'dialog-card';
+            card.dataset.role = d.role;
+
+            card.innerHTML = `
+                <div class="customer-line">
+                    <span>Покупатель:</span>
+                    „${d.text}“
+                </div>
+                <div class="btn-group">
+                    <button class="choice-btn" onclick="checkChoice(this, 'продавец')">Продавец</button>
+                    <button class="choice-btn" onclick="checkChoice(this, 'уборщица')">Уборщица</button>
+                </div>
+            `;
+            list.appendChild(card);
+        });
+    }
+
+    function checkChoice(btn, choice) {
+        const card = btn.closest('.dialog-card');
+        const correctRole = card.dataset.role;
+
+        if (choice === correctRole) {
+            btn.classList.add('correct-choice');
+            setTimeout(() => {
+                if (!document.body.classList.contains('solution-active')) {
+                    card.classList.add('matched');
+                }
+            }, 600);
+        } else {
+            btn.classList.add('wrong-choice');
+            setTimeout(() => {
+                btn.classList.remove('wrong-choice');
+            }, 800);
+        }
+    }
+
+    function resetGame() {
+        document.body.classList.remove('solution-active');
+        init();
+    }
+
+    function showSolution() {
+        document.body.classList.add('solution-active');
+        const cards = document.querySelectorAll('.dialog-card');
+        cards.forEach(card => {
+            card.classList.add('solution-mode');
+            card.classList.remove('matched');
+            const correctRole = card.dataset.role;
+            const buttons = card.querySelectorAll('.choice-btn');
+            
+            buttons.forEach(btn => {
+                if (btn.textContent.toLowerCase() === correctRole) {
+                    btn.style.backgroundColor = (correctRole === 'продавец') ? '#3498db' : '#9b59b6';
+                    btn.style.color = 'white';
+                    btn.style.borderColor = '#333';
+                } else {
+                    btn.style.opacity = '0.3';
+                    btn.style.pointerEvents = 'none';
+                }
+            });
+        });
+    }
+
+    init();
+</script>
+
+</body>
+</html>
